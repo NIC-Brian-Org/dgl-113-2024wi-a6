@@ -3,94 +3,140 @@ import path from 'path';
 describe('all tests', () => {
   beforeAll(async () => {
     const URL = `file:///${path.resolve(__dirname, '../docs/index.html')}`;
-    await page.goto(URL, {
-      waitUntil: 'networkidle2',
-    });
+    await page.setViewport({ width: 1920, height: 1080 });
+    await page.goto(URL, { waitUntil: 'networkidle2' });
   });
 
   beforeEach(async () => {
-    await page.reload({
-      waitUntil: 'networkidle2',
-    });
+    await page.reload({ waitUntil: 'networkidle2' });
   });
 
   it('case1', async () => {
-    await page.evaluate(
-      'let item1 = new OrderItem(5,"Short (236ml)","Blonde Roast Coffee")'
-    );
-    const v = await page.evaluate('item1.quantity');
-    expect(v).toEqual(5);
+    await page.waitForSelector('#totalCost');
+
+    let element = await page.$('#totalCost');
+    let value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('$0.00');
   });
 
   it('case2', async () => {
-    await page.evaluate(
-      'let item1 = new OrderItem(5,"Short (236ml)","Blonde Roast Coffee")'
-    );
-    const v = await page.evaluate('item1.size');
-    expect(v).toEqual('Short (236ml)');
+    await page.click('#addItem');
+    await page.waitForSelector('#totalCost');
+
+    let element = await page.$('#totalCost');
+    let value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('$2.99');
   });
 
   it('case3', async () => {
-    await page.evaluate(
-      'let item1 = new OrderItem(5,"Short (236ml)","Blonde Roast Coffee")'
-    );
-    const v = await page.evaluate('item1.description');
-    expect(v).toEqual('Blonde Roast Coffee');
+    await page.click('#addItem');
+    await page.waitForSelector('#totalCost');
+
+    let element = await page.$('tbody td:first-of-type');
+    let value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('1');
   });
 
   it('case4', async () => {
-    await page.evaluate(
-      'let item1 = new OrderItem(5,"Short (236ml)","Blonde Roast Coffee")'
-    );
-    const v = await page.evaluate('item1.cost()');
-    expect(v).toBeCloseTo(14.95);
+    await page.click('#addItem');
+    await page.waitForSelector('#totalCost');
+
+    let element = await page.$('tbody td:nth-of-type(2)');
+    let value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('Short (236ml)');
   });
 
   it('case5', async () => {
-    await page.evaluate(
-      'let item1 = new OrderItem(6,"Tall (354ml)","Medium Roast Coffee")'
-    );
-    const v = await page.evaluate('item1.cost()');
-    expect(v).toBeCloseTo(19.14);
+    await page.click('#addItem');
+    await page.waitForSelector('#totalCost');
+
+    let element = await page.$('tbody td:nth-of-type(3)');
+    let value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('Blonde Roast Coffee');
   });
 
   it('case6', async () => {
-    await page.evaluate(
-      'let item1 = new OrderItem(7,"Grande (473ml)","Dark Roast Coffee")'
-    );
-    const v = await page.evaluate('item1.cost()');
-    expect(v).toBeCloseTo(24.43);
+    await page.select('#quantity', '7');
+    await page.select('#size', 'Grande (473ml)');
+    await page.select('#description', 'Earl Grey Tea');
+    await page.click('#addItem');
+    await page.waitForSelector('#totalCost');
+
+    let element = await page.$('tbody td:first-of-type');
+    let value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('7');
+    element = await page.$('tbody td:nth-of-type(2)');
+    value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('Grande (473ml)');
+    element = await page.$('tbody td:nth-of-type(3)');
+    value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('Earl Grey Tea');
+
+    element = await page.$('#totalCost');
+    value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('$22.75');
   });
 
   it('case7', async () => {
-    await page.evaluate(
-      'let item1 = new OrderItem(8,"Venti (591ml)","Earl Grey Tea")'
-    );
-    const v = await page.evaluate('item1.cost()');
-    expect(v).toBeCloseTo(28);
+    await page.select('#quantity', '7');
+    await page.select('#size', 'Grande (473ml)');
+    await page.select('#description', 'Earl Grey Tea');
+    await page.click('#addItem');
+    await page.select('#quantity', '3');
+    await page.select('#size', 'Venti (591ml)');
+    await page.select('#description', 'Dark Roast Coffee');
+    await page.click('#addItem');
+    await page.waitForSelector('#totalCost');
+
+    let element = await page.$('tbody tr:first-of-type td:first-of-type');
+    let value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('7');
+    element = await page.$('tbody tr:first-of-type td:nth-of-type(2)');
+    value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('Grande (473ml)');
+    element = await page.$('tbody tr:first-of-type td:nth-of-type(3)');
+    value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('Earl Grey Tea');
+
+    element = await page.$('tbody tr:nth-of-type(2) td:first-of-type');
+    value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('3');
+    element = await page.$('tbody tr:nth-of-type(2) td:nth-of-type(2)');
+    value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('Venti (591ml)');
+    element = await page.$('tbody tr:nth-of-type(2) td:nth-of-type(3)');
+    value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('Dark Roast Coffee');
+
+    element = await page.$('#totalCost');
+    value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('$34.72');
   });
 
   it('case8', async () => {
-    await page.evaluate(
-      'let item1 = new OrderItem(9,"Short (236ml)","English Breakfast Tea")'
-    );
-    const v = await page.evaluate('item1.cost()');
-    expect(v).toBeCloseTo(25.65);
-  });
+    await page.select('#quantity', '7');
+    await page.select('#size', 'Grande (473ml)');
+    await page.select('#description', 'Earl Grey Tea');
+    await page.click('#addItem');
+    await page.select('#quantity', '3');
+    await page.select('#size', 'Venti (591ml)');
+    await page.select('#description', 'Dark Roast Coffee');
+    await page.click('#addItem');
+    await page.click('tbody tr:nth-of-type(1) button');
+    await page.waitForSelector('#totalCost');
 
-  it('case9', async () => {
-    await page.evaluate(
-      'let item1 = new OrderItem(1,"Venti (591ml)","Blonde Roast Coffee")'
-    );
-    const v = await page.evaluate('item1.cost()');
-    expect(v).toBeCloseTo(3.99);
-  });
+    let element = await page.$('tbody tr:nth-of-type(1) td:first-of-type');
+    let value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('3');
+    element = await page.$('tbody tr:nth-of-type(1) td:nth-of-type(2)');
+    value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('Venti (591ml)');
+    element = await page.$('tbody tr:nth-of-type(1) td:nth-of-type(3)');
+    value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('Dark Roast Coffee');
 
-  it('caseX', async () => {
-    await page.evaluate(
-      'let item1 = new OrderItem(2,"Short (236ml)","Medium Roast Coffee")'
-    );
-    const v = await page.evaluate('item1.cost()');
-    expect(v).toBeCloseTo(5.98);
+    element = await page.$('#totalCost');
+    value = await page.evaluate((el) => el.innerText, element);
+    expect(value).toBe('$11.97');
   });
 });
